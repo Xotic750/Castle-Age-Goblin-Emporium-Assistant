@@ -3,15 +3,15 @@
 // @namespace      Goblin
 // @include        http://apps.facebook.com/castle_age/goblin_emp.php*
 // @exclude        *#iframe*
-// @require        http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js
-// @require        http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.3/jquery-ui.min.js
+// @require        http://cloutman.com/jquery-latest.min.js
+// @require        http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/jquery-ui-1.8.1/js/jquery-ui-1.8.1.custom.min.js
 // @version        1.0.0
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @compatability  Firefox 3.0+, Chrome 4+, Flock 2.0+
 // ==/UserScript==
 
 /*jslint white: true, browser: true, onevar: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, newcap: true, immed: true, strict: true */
-/*global $,GM_xmlhttpRequest,window,unsafeWindow,GM_registerMenuCommand,XPathResult */
+/*global $,GM_xmlhttpRequest,window,unsafeWindow,confirm,GM_registerMenuCommand,XPathResult */
 
 "use strict";
 
@@ -21,14 +21,14 @@ var Goblin = {
     check_update: function (currentVersion) {
         var request = new GM_xmlhttpRequest({
             method: 'GET',
-            url: 'http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/Castle-Age-Goblin-Emporium.user.js',
+            url: 'http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/Chrome/Castle-Age-Goblin-Emporium-Assistant.user.js',
             headers: {'Cache-Control': 'no-cache'},
             onload: function (resp) {
                 var remote_version = new RegExp("@version\\s*(.*?)\\s*$", "m").exec(resp.responseText)[1];
                 if (remote_version > currentVersion) {
                     if (confirm("There is a newer version of this script available.  Would you like to update?")) {
                         setTimeout(function () {
-                            unsafeWindow.location.href = "http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/Castle-Age-Goblin-Emporium.user.js";
+                            unsafeWindow.location.href = "http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/Chrome/Castle-Age-Goblin-Emporium-Assistant.user.js";
                         }, 3000);
                     }
                 }
@@ -159,26 +159,29 @@ var Goblin = {
 
         this.goblin_dialog = $("#goblin_dialog");
         if (!this.goblin_dialog.length) {
-            this.goblin_dialog = this.ge_dialog;
-            this.message.html("Select alchemy piece and iterations...").appendTo(this.goblin_dialog);
-            this.control.appendTo(this.goblin_dialog);
+            this.goblin_dialog = Goblin.ge_dialog;
+            Goblin.message.html("Select alchemy piece and iterations...").appendTo(this.goblin_dialog);
+            Goblin.control.appendTo(this.goblin_dialog);
             $("<div>Progress</div>").css({margin: '5px'}).appendTo(this.goblin_dialog);
-            this.progress.appendTo(this.goblin_dialog);
+            Goblin.progress.appendTo(this.goblin_dialog);
             $("<div>Status</div>").css({margin: '5px'}).appendTo(this.goblin_dialog);
-            this.status.appendTo(this.goblin_dialog);
+            Goblin.status.appendTo(this.goblin_dialog);
             $("<div>Received Items</div>").css({margin: '5px'}).appendTo(this.goblin_dialog);
-            this.itemlog.appendTo(this.goblin_dialog);
+            Goblin.itemlog.appendTo(this.goblin_dialog);
             this.goblin_dialog.prependTo(document.body).dialog({
-                resizable : false,
-                height    : 430,
-                width     : 580,
-                zIndex    : 99999
+                resizable  : false,
+                height     : 460,
+                width      : 580,
+                zIndex     : 99999,
+                dialogClass: "cagefix"
             });
+
+            $('.cagefix.ui-dialog').css({position: "fixed"});
         }
 
         if (this.goblin_dialog.length) {
-            this.fillItems();
-            $.each(this.theItems, function (index) {
+            Goblin.fillItems();
+            $.each(Goblin.theItems, function (index) {
                 selectItem.append("<option value='" + index + "'>" + this.name + " : (" + this.count + ")</option>");
             });
 
@@ -200,8 +203,8 @@ var Goblin = {
                 Goblin.doIt();
             });
 
-            this.control.html("");
-            this.control.append(selectItem, selectFreq, buttonSub);
+            Goblin.control.html("");
+            Goblin.control.append(selectItem, selectFreq, buttonSub);
         }
     },
 
@@ -343,37 +346,30 @@ var Goblin = {
     },
 
     init: function () {
-        var checkCSS = null;
-        if (navigator.userAgent.toLowerCase().indexOf('chrome') !== -1 ? true : false) {
-            checkCSS = $('link[href*="jquery-ui-1.8.1.custom.css"');
-            if (!checkCSS.length) {
-                $("<link>").appendTo("head").attr({
-                    rel: "stylesheet",
-                    type: "text/css",
-                    href: "http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/jquery-ui-1.8.1/css/smoothness/jquery-ui-1.8.1.custom.css"
-                });
-            }
-        } else {
-            checkCSS = $('link[href*="jquery-ui-1.7.3.custom.css"');
-            if (!checkCSS.length) {
-                $("<link>").appendTo("head").attr({
-                    rel: "stylesheet",
-                    type: "text/css",
-                    href: "http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/jquery-ui-1.7.3/css/smoothness/jquery-ui-1.7.3.custom.css"
-                });
-            }
+        var checkCSS = $('link[href*="jquery-ui-1.8.1.custom.css"'),
+            menu = null;
+        if (!checkCSS.length) {
+            $("<link>").appendTo("head").attr({
+                rel: "stylesheet",
+                type: "text/css",
+                href: "http://github.com/Xotic750/Castle-Age-Goblin-Emporium-Assistant/raw/master/jquery-ui-1.8.1/css/smoothness/jquery-ui-1.8.1.custom.css"
+            });
         }
 
         $('#app46755028429_gin_left_amt').bind('DOMNodeInserted', this.checkCount);
         $('#app46755028429_globalContainer').bind('DOMNodeInserted', this.feedback);
-        this.chooser();
+
+        if (navigator.userAgent.toLowerCase().indexOf('chrome') !== -1 ? true : false) {
+            window.setTimeout(function () {
+                Goblin.chooser();
+            }, 1000);
+        } else {
+            this.check_update(this.version);
+            menu = new GM_registerMenuCommand("Castle Age Goblin Emporium Assistant", this.chooser);
+        }
     }
 };
 
 $(function () {
-    if (navigator.userAgent.toLowerCase().indexOf('chrome') !== -1 ? true : false) {
-        Goblin.init();
-    } else {
-        GM_registerMenuCommand("Castle Age Goblin Emporium Assistant", Goblin.init());
-    }
+    Goblin.init();
 });
