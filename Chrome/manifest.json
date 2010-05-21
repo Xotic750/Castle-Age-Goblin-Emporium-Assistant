@@ -1,0 +1,19 @@
+{
+   "content_scripts": [ {
+      "exclude_globs": [ "*#iframe*" ],
+      "include_globs": [ "http*://apps.facebook.com/castle_age/goblin_emp.php*" ],
+      "js": [ "jquery-1.4.2.min.js",
+             "jquery-ui-1.8.1.custom.min.js",
+             "Castle-Age-Goblin-Emporium-Assistant.user.js" ],
+      "matches": [ "http://*/*", "https://*/*" ]
+   } ],
+   "converted_from_user_script": true,
+   "description": "Castle Age Goblin Emporium Assistant for Castle Age game on Facebook.",
+   "icons": {
+      "128": "128x128.png",
+      "48": "48x48.png"
+   },
+   "name": "Castle Age Goblin Emporium Assistant",
+   "permissions": [ "tabs", "http://apps.facebook.com/castle_age/goblin_emp.php*", "https://apps.facebook.com/castle_age/goblin_emp.php*" ],
+   "version": "1.0.0"
+}
