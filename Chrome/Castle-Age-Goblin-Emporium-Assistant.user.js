@@ -130,6 +130,7 @@ var Goblin = {
     theItems: [],
 
     fillItems: function () {
+        this.theItems = [];
         $('.ingredientUnit[style*="display: block"]').each(function (index) {
             var itemName = $(this).find('img:first').attr('title'),
                 itemImg  = $(this).find('img:first').attr('src'),
@@ -169,14 +170,32 @@ var Goblin = {
             $("<div>Received Items</div>").css({margin: '5px'}).appendTo(this.goblin_dialog);
             Goblin.itemlog.appendTo(this.goblin_dialog);
             this.goblin_dialog.prependTo(document.body).dialog({
-                resizable  : false,
-                height     : 460,
-                width      : 580,
-                zIndex     : 99999,
-                dialogClass: "cagefix"
+                autoOpen    : false,
+                resizable   : false,
+                height      : 460,
+                width       : 580,
+                zIndex      : 99999,
+                dialogClass : "cagefix",
+                show        : 'fold',
+                hide        : 'fold',
+                close       : function (event, ui) {
+                    if (Goblin.doIterations) {
+                        Goblin.writeStatus('Run cancelled by user!');
+                        Goblin.progress.progressbar("option", "value", 100).attr("title", "Progress: 100%");
+                    }
+
+                    Goblin.goblin_start.css({
+                        display: 'block'
+                    });
+
+                    Goblin.doIterations = 0;
+                    Goblin.display = false;
+                }
             });
 
             $('.cagefix.ui-dialog').css({position: "fixed"});
+
+            //$('.ui-dialog-titlebar-close').before('<a href="#" class="ui-dialog-titlebar-other ui-corner-all" role="button" unselectable="on"><span class="ui-icon ui-icon-pin-s" unselectable="on">close</span></a>');
         }
 
         if (this.goblin_dialog.length) {
@@ -205,6 +224,13 @@ var Goblin = {
 
             Goblin.control.html("");
             Goblin.control.append(selectItem, selectFreq, buttonSub);
+
+            if (this.display) {
+                this.goblin_dialog.dialog("open");
+                this.goblin_start.css({
+                    display: 'none'
+                });
+            }
         }
     },
 
@@ -308,7 +334,7 @@ var Goblin = {
             );
 
             Goblin.itemlog.prepend(logline);
-            percentage = 100 - (Goblin.doIterations / Goblin.doIterationsReq) * 100;
+            percentage = Math.floor(100 - (Goblin.doIterations / Goblin.doIterationsReq) * 100);
             Goblin.progress.progressbar("option", "value", percentage).attr("title", "Progress: " + percentage + "%");
             Goblin.itemsNeeded = 10;
             $('#app46755028429_gin_left_amt').bind('DOMNodeInserted', Goblin.checkCount);
@@ -345,9 +371,23 @@ var Goblin = {
         this.doIterations -= 1;
     },
 
+    goblin_start: null,
+
+    display: false,
+
+    ge_start: $("<div id='goblin_start'></div>").css({
+        top      : '40px',
+        left     : '0px',
+        zIndex   : '99999',
+        position : 'fixed',
+        display  : 'block'
+    }),
+
     init: function () {
-        var checkCSS = $('link[href*="jquery-ui-1.8.1.custom.css"'),
-            menu = null;
+        var checkCSS     = $('link[href*="jquery-ui-1.8.1.custom.css"'),
+            buttonStart  = $("<button>CAGE Assistant</button>").button().attr("title", "Click to open Castle Age Goblin Emporium Assistant."),
+            menu         = null;
+
         if (!checkCSS.length) {
             $("<link>").appendTo("head").attr({
                 rel: "stylesheet",
@@ -360,9 +400,16 @@ var Goblin = {
         $('#app46755028429_globalContainer').bind('DOMNodeInserted', this.feedback);
 
         if (navigator.userAgent.toLowerCase().indexOf('chrome') !== -1 ? true : false) {
-            window.setTimeout(function () {
-                Goblin.chooser();
-            }, 1000);
+            this.goblin_start = $("#goblin_start");
+            if (!this.goblin_start.length) {
+                this.goblin_start = Goblin.ge_start;
+                this.goblin_start.append(buttonStart);
+                this.goblin_start.prependTo(document.body);
+                buttonStart.click(function () {
+                    Goblin.display = true;
+                    Goblin.chooser();
+                });
+            }
         } else {
             this.check_update(this.version);
             menu = new GM_registerMenuCommand("Castle Age Goblin Emporium Assistant", this.chooser);
