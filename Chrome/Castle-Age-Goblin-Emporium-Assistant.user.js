@@ -69,6 +69,10 @@ var Goblin = {
         margin    : '5px'
     }).progressbar().attr("title", "Progress: 0%"),
 
+    setProgress: function (percentage) {
+        this.progress.progressbar("option", "value", percentage).attr("title", "Progress: " + percentage + "%");
+    },
+
     status: $("<div id='goblin_dialog_status'></div>").css({
         height    : '10%',
         width     : 'auto',
@@ -78,16 +82,6 @@ var Goblin = {
         overflowX : 'hidden',
         overflowY : 'scroll'
     }).attr("title", "Displays the status messages"),
-
-    itemlog: $("<div id='goblin_dialog_itemlog'></div>").css({
-        height    : '50%',
-        width     : 'auto',
-        margin    : '5px',
-        border    : 'solid 1px black',
-        padding   : '5px',
-        overflowX : 'hidden',
-        overflowY : 'scroll'
-    }).attr("title", "Displays the received items and their attributes."),
 
     writeStatus: function (message) {
         var now = new Date(),
@@ -126,6 +120,16 @@ var Goblin = {
         lineStat.prepend(timeDiv.html(time + '\f'), messDiv.html(message + '\f'));
         this.status.prepend(lineStat);
     },
+
+    itemlog: $("<div id='goblin_dialog_itemlog'></div>").css({
+        height    : '50%',
+        width     : 'auto',
+        margin    : '5px',
+        border    : 'solid 1px black',
+        padding   : '5px',
+        overflowX : 'hidden',
+        overflowY : 'scroll'
+    }).attr("title", "Displays the received items and their attributes."),
 
     theItems: [],
 
@@ -181,7 +185,7 @@ var Goblin = {
                 close       : function (event, ui) {
                     if (Goblin.doIterations) {
                         Goblin.writeStatus('Run cancelled by user!');
-                        Goblin.progress.progressbar("option", "value", 100).attr("title", "Progress: 100%");
+                        Goblin.setProgress(100);
                     }
 
                     Goblin.goblin_start.css({
@@ -209,7 +213,7 @@ var Goblin = {
             });
 
             buttonSub.click(function () {
-                Goblin.progress.progressbar("option", "value", 0).attr("title", "Progress: 0%");
+                Goblin.setProgress(0);
                 Goblin.doIterations = Number(selectFreq.val());
                 Goblin.doItem = Goblin.theItems[$(":selected", selectItem).attr("value")];
                 if (Goblin.doItem.max < Goblin.doIterations && Goblin.doItem.max > 0 && Goblin.doIterations > 0) {
@@ -234,32 +238,78 @@ var Goblin = {
         }
     },
 
-    clickImg: function (imageName) {
+    checkImage: function (imageName) {
+        var exists = false;
         if (imageName) {
-            var imgObj = document.evaluate(".//img[contains(translate(@src,'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '" + imageName + "')]", document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-            if (imgObj && imgObj.singleNodeValue) {
-                this.click(imgObj.singleNodeValue);
+            if ($("img[src*='" + imageName + "']").length) {
+                exists = true;
             }
         }
+
+        return exists;
+    },
+
+    checkId: function (id) {
+        var exists = false;
+        if (id) {
+            if ($("#" + id).length) {
+                exists = true;
+            }
+        }
+
+        return exists;
+    },
+
+    checkIdDisplayed: function (id) {
+        var displayed = false;
+        if (id) {
+            if (this.checkId(id)) {
+                if ($("#" + id).css("display") === "block") {
+                    displayed = true;
+                }
+            }
+        }
+
+        return displayed;
+    },
+
+    clickImg: function (imageName) {
+        var clicked = false;
+        if (imageName) {
+            if (this.checkImage(imageName)) {
+                var imgObj = document.evaluate(".//img[contains(translate(@src,'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '" + imageName + "')]", document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                if (imgObj && imgObj.singleNodeValue) {
+                    clicked = this.click(imgObj.singleNodeValue);
+                }
+            }
+        }
+
+        return clicked;
     },
 
     clickItem: function (id) {
+        var clicked = false;
         if (id) {
             var obj = document.getElementById(id);
             if (obj) {
-                this.click(obj);
+                clicked = this.click(obj);
             }
         }
+
+        return clicked;
     },
 
     click: function (obj) {
+        var clicked = false;
         if (obj) {
             var evt = document.createEvent("MouseEvents");
             if (evt) {
                 evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-                obj.dispatchEvent(evt);
+                clicked = obj.dispatchEvent(evt);
             }
         }
+
+        return clicked;
     },
 
     itemsNeeded: 10,
@@ -335,7 +385,7 @@ var Goblin = {
 
             Goblin.itemlog.prepend(logline);
             percentage = Math.floor(100 - (Goblin.doIterations / Goblin.doIterationsReq) * 100);
-            Goblin.progress.progressbar("option", "value", percentage).attr("title", "Progress: " + percentage + "%");
+            Goblin.setProgress(percentage);
             Goblin.itemsNeeded = 10;
             $('#app46755028429_gin_left_amt').bind('DOMNodeInserted', Goblin.checkCount);
             window.setTimeout(function () {
@@ -356,19 +406,39 @@ var Goblin = {
     safetyCatch: true,
 
     doIt: function () {
-        var tid = window.setTimeout(function () {
-                Goblin.safetyCatch = false;
-                Goblin.writeStatus('Implimented safteycatch!');
-            }, 6000);
+        if (this.checkImage('emporium_button_gray.gif')) {
+            if (this.doItem.id.length) {
+                while (this.itemsNeeded > 0 && this.safetyCatch) {
+                    if (this.checkIdDisplayed(this.doItem.id)) {
+                        this.clickItem(this.doItem.id);
+                    } else {
+                        this.safetyCatch = false;
+                    }
+                }
 
-        while (this.itemsNeeded > 0 && this.safetyCatch) {
-            this.clickItem(this.doItem.id);
+                if (this.safetyCatch) {
+                    this.clickImg('emporium_button.gif');
+                    this.doIterations -= 1;
+                } else {
+                    this.writeStatus('Implimented safteycatch because item not displayed! Run cancelled.');
+                    this.doIterations = 0;
+                    this.setProgress(100);
+                    this.chooser();
+                }
+
+                this.safetyCatch = true;
+            } else {
+                this.writeStatus('Item ID not found. Run cancelled!');
+                this.doIterations = 0;
+                this.setProgress(100);
+                this.chooser();
+            }
+        } else {
+            Goblin.writeStatus("We don't appear to be on the Goblin Emporium page! Reloading ...");
+            window.setTimeout(function () {
+                window.location.href = "http://apps.facebook.com/castle_age/goblin_emp.php";
+            }, 5000);
         }
-
-        window.clearTimeout(tid);
-        this.safetyCatch = true;
-        this.clickImg('emporium_button.gif');
-        this.doIterations -= 1;
     },
 
     goblin_start: null,
@@ -385,8 +455,7 @@ var Goblin = {
 
     init: function () {
         var checkCSS     = $('link[href*="jquery-ui-1.8.1.custom.css"'),
-            buttonStart  = $("<button>CAGE Assistant</button>").button().attr("title", "Click to open Castle Age Goblin Emporium Assistant."),
-            menu         = null;
+            buttonStart  = $("<button>CAGE Assistant</button>").button().attr("title", "Click to open Castle Age Goblin Emporium Assistant.");
 
         if (!checkCSS.length) {
             $("<link>").appendTo("head").attr({
@@ -399,20 +468,19 @@ var Goblin = {
         $('#app46755028429_gin_left_amt').bind('DOMNodeInserted', this.checkCount);
         $('#app46755028429_globalContainer').bind('DOMNodeInserted', this.feedback);
 
-        if (navigator.userAgent.toLowerCase().indexOf('chrome') !== -1 ? true : false) {
-            this.goblin_start = $("#goblin_start");
-            if (!this.goblin_start.length) {
-                this.goblin_start = Goblin.ge_start;
-                this.goblin_start.append(buttonStart);
-                this.goblin_start.prependTo(document.body);
-                buttonStart.click(function () {
-                    Goblin.display = true;
-                    Goblin.chooser();
-                });
-            }
-        } else {
+        if (navigator.userAgent.toLowerCase().indexOf('chrome') === -1 ? true : false) {
             this.check_update(this.version);
-            menu = new GM_registerMenuCommand("Castle Age Goblin Emporium Assistant", this.chooser);
+        }
+
+        this.goblin_start = $("#goblin_start");
+        if (!this.goblin_start.length) {
+            this.goblin_start = Goblin.ge_start;
+            this.goblin_start.append(buttonStart);
+            this.goblin_start.prependTo(document.body);
+            buttonStart.click(function () {
+                Goblin.display = true;
+                Goblin.chooser();
+            });
         }
     }
 };
