@@ -160,10 +160,9 @@ var Goblin = {
         var selectItem = $("<select name='Items' id='Items'></select>").attr("title", "Select the alchemy piece to exchange."),
             selectFreq = $("<select name='Iterations' id='Iterations'></select>").attr("title", "Select the number of iterations for the exchange."),
             buttonSub  = $("<button>GO!</button>").button().attr("title", "Click when you are ready to begin the exchange."),
-            freq       = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+            freq       = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-        this.goblin_dialog = $("#goblin_dialog");
-        if (!this.goblin_dialog.length) {
+        if (this.goblin_dialog === null) {
             this.goblin_dialog = Goblin.ge_dialog;
             Goblin.message.html("Select alchemy piece and iterations...").appendTo(this.goblin_dialog);
             Goblin.control.appendTo(this.goblin_dialog);
@@ -472,8 +471,7 @@ var Goblin = {
             this.check_update(this.version);
         }
 
-        this.goblin_start = $("#goblin_start");
-        if (!this.goblin_start.length) {
+        if (this.goblin_start === null) {
             this.goblin_start = Goblin.ge_start;
             this.goblin_start.append(buttonStart);
             this.goblin_start.prependTo(document.body);
